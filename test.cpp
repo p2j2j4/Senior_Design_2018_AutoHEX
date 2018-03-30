@@ -22,6 +22,7 @@ int main(int argc, char **argv)
     mavros_msgs::SetMode srv_setMode;
     srv_setMode.request.base_mode = 0;
     srv_setMode.request.custom_mode = "STABILIZE";
+
     if(cl.call(srv_setMode)){
         ROS_ERROR("setmode send ok %d value:", srv_setMode.response.success);
     }else{
@@ -58,9 +59,20 @@ int main(int argc, char **argv)
     }
 
     ////////////////////////////////////////////
-    /////////////////DO STUFF///////////////////
+    /////////////////GUIDED/////////////////////
     ////////////////////////////////////////////
-    sleep(10);
+    ros::ServiceClient cl = n.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
+    mavros_msgs::SetMode srv_setMode;
+    srv_setMode.request.base_mode = 0;
+    srv_setMode.request.custom_mode = "GUIDED";
+
+    if(cl.call(srv_setMode)){
+        ROS_ERROR("setmode send ok %d value:", srv_setMode.response.success);
+    }
+    else{
+        ROS_ERROR("Failed SetMode");
+        return -1;
+    }
 
     ////////////////////////////////////////////
     ///////////////////LAND/////////////////////
