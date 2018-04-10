@@ -79,6 +79,18 @@ int main(int argc, char **argv)
         ROS_ERROR("Failed Land");
     }
 
+    ////////////////////////////////////////////
+    ///////////////////DISARM///////////////////
+    ////////////////////////////////////////////
+    ros::ServiceClient arming_cl = n.serviceClient<mavros_msgs::CommandBool>("/mavros/cmd/arming");
+    mavros_msgs::CommandBool srv;
+    srv.request.value = false;
+    if(arming_cl.call(srv)){
+        ROS_INFO("Motors disarmed %d", srv.response.success);
+    }else{
+        ROS_ERROR("Failed to disarm motors");
+    }
+
     while (n.ok())
     {
       ros::spinOnce();
