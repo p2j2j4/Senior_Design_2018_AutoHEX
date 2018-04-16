@@ -4,7 +4,6 @@
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/CommandTOL.h>
 #include <mavros_msgs/SetMode.h>
-#include <sensor_msgs/LaserScan.h>
 
 int main(int argc, char **argv)
 {
@@ -17,12 +16,12 @@ int main(int argc, char **argv)
     ros::Rate r(rate);
 
     ////////////////////////////////////////////
-    /////////////////ALT_HOLD///////////////////
+    /////////////////GUIDED//////////////////
     ////////////////////////////////////////////
     ros::ServiceClient cl = n.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
     mavros_msgs::SetMode srv_setMode;
-    srv_setMode.request.base_mode = 2; //change to 0 if fails
-    srv_setMode.request.custom_mode = "ALT_HOLD";
+    srv_setMode.request.base_mode = 0;
+    srv_setMode.request.custom_mode = "GUIDED";
 
     if(cl.call(srv_setMode)){
         ROS_INFO("setmode send ok %d value:", srv_setMode.response.success);
@@ -61,7 +60,7 @@ int main(int argc, char **argv)
     }
 
 
-    sleep(100); //allows for set amount of flight time before forced land
+    sleep(25); //allows for set amount of flight time before landing
 
     ////////////////////////////////////////////
     ///////////////////LAND/////////////////////
@@ -77,18 +76,6 @@ int main(int argc, char **argv)
         ROS_INFO("srv_land send ok %d", srv_land.response.success);
     }else{
         ROS_ERROR("Failed Land");
-    }
-
-    ////////////////////////////////////////////
-    ///////////////////DISARM///////////////////
-    ////////////////////////////////////////////
-    ros::ServiceClient arming_cl = n.serviceClient<mavros_msgs::CommandBool>("/mavros/cmd/arming");
-    mavros_msgs::CommandBool srv;
-    srv.request.value = false;
-    if(arming_cl.call(srv)){
-        ROS_INFO("Motors disarmed %d", srv.response.success);
-    }else{
-        ROS_ERROR("Failed to disarm motors");
     }
 
     while (n.ok())
