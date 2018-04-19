@@ -1,9 +1,26 @@
 #include <cstdlib>
 
 #include <ros/ros.h>
+
+//Mavros files
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/CommandTOL.h>
 #include <mavros_msgs/SetMode.h>
+
+//RPLIDAR data
+#include <Sensor_msgs/LaserScan.h>
+
+#define RAD2DEG(x) ((x)*180./M_PI)
+
+void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
+{
+    int count = scan->scan_time / scan->time_increment;
+
+    for(int i = 0; i < count; i++) {
+        float degree = RAD2DEG(scan->angle_min + scan->angle_increment * i);
+        ROS_INFO(": [%f, %f]", degree, scan->ranges[i]);
+    }
+}
 
 int main(int argc, char **argv)
 {

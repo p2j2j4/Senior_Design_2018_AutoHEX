@@ -19,7 +19,14 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
     for(int i = 0; i < count; i++) {
         float degree = RAD2DEG(scan->angle_min + scan->angle_increment * i);
         ROS_INFO(": [%f, %f]", degree, scan->ranges[i]);
+
+        if (scan->ranges[i] < .3){
+                ROS_ERROR(": [%f,%f]", degree, scan->ranges[i]);
+                break;
+        }
+
     }
+ROS_INFO(":[%f]",count);
 }
 
 int main(int argc, char **argv)
@@ -75,6 +82,7 @@ int main(int argc, char **argv)
     }else{
         ROS_ERROR("Failed Takeoff");
     }
+
 
 
     sleep(25); //allows for set amount of flight time before landing
