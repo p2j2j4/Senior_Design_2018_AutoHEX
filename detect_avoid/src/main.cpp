@@ -4,30 +4,28 @@
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/CommandTOL.h>
 #include <mavros_msgs/SetMode.h>
-#include <sensor_msgs/LaserScan.h>
 
 int main(int argc, char **argv)
 {
 
     int rate = 10;
 
-    ros::init(argc, argv, "mavros_takeoff");
+    ros::init(argc, argv, "detect_avoid"); //changed from "mavros_takeoff"
+
     ros::NodeHandle n;
 
     ros::Rate r(rate);
 
     ////////////////////////////////////////////
-    /////////////////ALT_HOLD///////////////////
+    /////////////////GUIDED/////////////////////
     ////////////////////////////////////////////
     ros::ServiceClient cl = n.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
     mavros_msgs::SetMode srv_setMode;
-    srv_setMode.request.base_mode = 2; //change to 0 if fails
-    srv_setMode.request.custom_mode = "ALT_HOLD";
-
+    srv_setMode.request.base_mode = 0;
+    srv_setMode.request.custom_mode = "GUIDED";
     if(cl.call(srv_setMode)){
-        ROS_INFO("setmode send ok %d value:", srv_setMode.response.success);
-    }
-    else{
+        ROS_ERROR("setmode send ok %d value:", srv_setMode.response.success);
+    }else{
         ROS_ERROR("Failed SetMode");
         return -1;
     }
@@ -39,9 +37,9 @@ int main(int argc, char **argv)
     mavros_msgs::CommandBool srv;
     srv.request.value = true;
     if(arming_cl.call(srv)){
-        ROS_INFO("ARM send ok %d", srv.response.success);
+        ROS_ERROR("ARM send ok %d", srv.response.success);
     }else{
-        ROS_ERROR("Failed Arming - Check FCU pre-arms (again)");
+        ROS_ERROR("Failed arming or disarming");
     }
 
     ////////////////////////////////////////////
@@ -49,26 +47,28 @@ int main(int argc, char **argv)
     ////////////////////////////////////////////
     ros::ServiceClient takeoff_cl = n.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/takeoff");
     mavros_msgs::CommandTOL srv_takeoff;
-    srv_takeoff.request.altitude = 8; //adjust if height is too low
+    srv_takeoff.request.altitude = 10;
     srv_takeoff.request.latitude = 0;
     srv_takeoff.request.longitude = 0;
     srv_takeoff.request.min_pitch = 0;
     srv_takeoff.request.yaw = 0;
     if(takeoff_cl.call(srv_takeoff)){
-        ROS_INFO("srv_takeoff send ok %d", srv_takeoff.response.success);
+        ROS_ERROR("srv_takeoff send ok %d", srv_takeoff.response.success);
     }else{
         ROS_ERROR("Failed Takeoff");
     }
 
-
-    sleep(100); //allows for set amount of flight time before forced land
+    ////////////////////////////////////////////
+    /////////////////DO STUFF///////////////////
+    ////////////////////////////////////////////
+    sleep(10);
 
     ////////////////////////////////////////////
     ///////////////////LAND/////////////////////
     ////////////////////////////////////////////
     ros::ServiceClient land_cl = n.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/land");
     mavros_msgs::CommandTOL srv_land;
-    srv_land.request.altitude = 0;
+    srv_land.request.altitude = 10;
     srv_land.request.latitude = 0;
     srv_land.request.longitude = 0;
     srv_land.request.min_pitch = 0;
@@ -77,18 +77,6 @@ int main(int argc, char **argv)
         ROS_INFO("srv_land send ok %d", srv_land.response.success);
     }else{
         ROS_ERROR("Failed Land");
-    }
-
-    ////////////////////////////////////////////
-    ///////////////////DISARM///////////////////
-    ////////////////////////////////////////////
-    ros::ServiceClient arming_cl = n.serviceClient<mavros_msgs::CommandBool>("/mavros/cmd/arming");
-    mavros_msgs::CommandBool srv;
-    srv.request.value = false;
-    if(arming_cl.call(srv)){
-        ROS_INFO("Motors disarmed %d", srv.response.success);
-    }else{
-        ROS_ERROR("Failed to disarm motors");
     }
 
     while (n.ok())

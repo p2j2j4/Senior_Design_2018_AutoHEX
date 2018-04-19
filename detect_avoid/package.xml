@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package>
+  <name>detect_avoid</name>
+  <version>1.0.0</version>
+  <description>package to react to laser scanner data using mavros commands</description>
+
+
+  <maintainer email="38jonesp@cua.edu">SPLOOJ</maintainer>
+
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>mavros</buildtool_depend>
+  <run_depend>mavros</run_depend>
+
+  <buildtool_depend>rplidar_ros</build_depend>
+  <run_depend>rplidar_ros</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+
+
+
+  <export>
+
+  </export>
+</package>
