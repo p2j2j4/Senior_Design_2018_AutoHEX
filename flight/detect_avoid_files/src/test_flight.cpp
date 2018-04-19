@@ -12,10 +12,10 @@
 
 #define RAD2DEG(x) ((x)*180./M_PI)
 
-void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
+int scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
 {
     int count = scan->scan_time / scan->time_increment;
-
+    int error = 0;
     for(int i = 0; i < 180; i++) {
         float degree = RAD2DEG(scan->angle_min + scan->angle_increment * i);
 
@@ -25,9 +25,12 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
         if (scan->ranges[i] < .5){
                 ROS_ERROR(": [%f,%f]", degree, scan->ranges[i]);
                 ROS_INFO("%f", count);
-
+                error = 1;
+                break;
+                
         }
     }
+    return error;
 }
 
 int main(int argc, char **argv)
@@ -82,11 +85,12 @@ int main(int argc, char **argv)
     }else{
         ROS_ERROR("Failed Takeoff");
     }
-
-
-    // Subscribe to laser scanner data
-    ros::Subscriber sub = n.subscribe<sensor_msgs::LaserScan>("/scan", 1000, scanCallback);
-
+    
+    int error = 0;
+    while(error!=1){
+        // Subscribe to laser scanner data
+        ros::Subscriber sub = n.subscribe<sensor_msgs::LaserScan>("/scan", 1000, scanCallback);
+    }
     ////////////////////////////////////////////
     ///////////////////LAND/////////////////////
     ////////////////////////////////////////////
