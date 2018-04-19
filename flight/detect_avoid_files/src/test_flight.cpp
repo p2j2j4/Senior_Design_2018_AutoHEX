@@ -16,25 +16,25 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
 {
     int count = scan->scan_time / scan->time_increment;
 
-    for(int i = 0; i < count; i++) {
+    for(int i = 0; i < 180; i++) {
         float degree = RAD2DEG(scan->angle_min + scan->angle_increment * i);
-        ROS_INFO(": [%f, %f]", degree, scan->ranges[i]);
 
-        if (scan->ranges[i] < .3){
+        // Print all angles and distances to the terminal window
+        // ROS_INFO(": [%f, %f]", degree, scan->ranges[i]);
+
+        if (scan->ranges[i] < .5){
                 ROS_ERROR(": [%f,%f]", degree, scan->ranges[i]);
-                break;
-        }
+                ROS_INFO("%f", count);
 
+        }
     }
-ROS_INFO(":[%f]",count);
 }
 
 int main(int argc, char **argv)
 {
-
     int rate = 10;
 
-    ros::init(argc, argv, "mavros_takeoff");
+    ros::init(argc, argv, "detect_avoid");
     ros::NodeHandle n;
 
     ros::Rate r(rate);
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
     ////////////////////////////////////////////
     ros::ServiceClient takeoff_cl = n.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/takeoff");
     mavros_msgs::CommandTOL srv_takeoff;
-    srv_takeoff.request.altitude = 8; //adjust if height is too low
+    srv_takeoff.request.altitude = 4; //adjust if height is too low TODO: check THR_MAX value in MP
     srv_takeoff.request.latitude = 0;
     srv_takeoff.request.longitude = 0;
     srv_takeoff.request.min_pitch = 0;
@@ -84,8 +84,8 @@ int main(int argc, char **argv)
     }
 
 
-
-    sleep(25); //allows for set amount of flight time before landing
+    // Subscribe to laser scanner data
+    ros::Subscriber sub = n.subscribe<sensor_msgs::LaserScan>("/scan", 1000, scanCallback);
 
     ////////////////////////////////////////////
     ///////////////////LAND/////////////////////
