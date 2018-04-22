@@ -15,25 +15,41 @@
 void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
 {
     int count = scan->scan_time / scan->time_increment;
-    int error = 0;
-    while(error!=1){
+
         for(int i = 0; i < count; i++) {
             float degree = RAD2DEG(scan->angle_min + scan->angle_increment * i);
 
             // Print all angles and distances to the terminal window
             // ROS_INFO(": [%f, %f]", degree, scan->ranges[i]);
 
-            if (scan->ranges[i] < .5){
-                    error = 1;
+            //Show errors when object gets too close to laser scanner
+            if (scan->ranges[i] < .3){
                     ROS_ERROR(": [%f,%f]", degree, scan->ranges[i]);
                     ROS_INFO_STREAM(": count: "<< i);
                     break;
+             }
 
+            // Land the copter if a call to land has not already been made
+            if ((scan->ranges[i] < .3 ) && (!land_cl.call(srv_land)) ){
+
+                ////////////////////////////////////////////
+                ///////////////////LAND/////////////////////
+                ////////////////////////////////////////////
+                ros::ServiceClient land_cl = n.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/land");
+                mavros_msgs::CommandTOL srv_land;
+                srv_land.request.altitude = 0;
+                srv_land.request.latitude = 0;
+                srv_land.request.longitude = 0;
+                srv_land.request.min_pitch = 0;
+                srv_land.request.yaw = 0;
+                if(land_cl.call(srv_land)){
+                    ROS_INFO("srv_land send ok %d", srv_land.response.success);
+                }else{
+                    ROS_ERROR("Failed Land");
+                }
 
             }
-        }
-    }
-    exit(0);
+       }
     
 }
 
@@ -47,7 +63,7 @@ int main(int argc, char **argv)
     ros::Rate r(rate);
 
     ////////////////////////////////////////////
-    /////////////////GUIDED//////////////////
+    /////////////////GUIDED/////////////////////
     ////////////////////////////////////////////
     ros::ServiceClient cl = n.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
     mavros_msgs::SetMode srv_setMode;
@@ -92,24 +108,10 @@ int main(int argc, char **argv)
     
     
     ROS_INFO("Check");
+
     // Subscribe to laser scanner data
     ros::Subscriber sub = n.subscribe<sensor_msgs::LaserScan>("/scan", 1000, scanCallback);
-    ROS_INFO("Check 2.0");
-    ////////////////////////////////////////////
-    ///////////////////LAND/////////////////////
-    ////////////////////////////////////////////
-    ros::ServiceClient land_cl = n.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/land");
-    mavros_msgs::CommandTOL srv_land;
-    srv_land.request.altitude = 0;
-    srv_land.request.latitude = 0;
-    srv_land.request.longitude = 0;
-    srv_land.request.min_pitch = 0;
-    srv_land.request.yaw = 0;
-    if(land_cl.call(srv_land)){
-        ROS_INFO("srv_land send ok %d", srv_land.response.success);
-    }else{
-        ROS_ERROR("Failed Land");
-    }
+
 
     while (n.ok())
     {
