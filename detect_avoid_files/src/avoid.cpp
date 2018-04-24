@@ -49,11 +49,8 @@ int main(int argc, char **argv){
     wp_msg.x_lat = 40.0;
     wp_msg.y_long = 30.0;
     wp_msg.z_alt = 5.0;
-
-    wp_clear_srv.request = {};
-
-    wp_push_srv.request.start_index = 0;
-    wp_push_srv.request.waypoints.push_back(wp_msg);
+    
+   wp_push_srv.request.waypoints.push_back(wp_msg);
 
    set_home_srv.request.current_gps = false;
    set_home_srv.request.latitude = 11;
