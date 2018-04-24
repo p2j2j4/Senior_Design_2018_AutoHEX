@@ -12,8 +12,9 @@
 #include <mavros_msgs/Waypoint.h>
 
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv){
+
+    // Add subscriber for velocity commands published by detect.cpp
     int rate = 10;
 
     ros::init(argc, argv, "detect_avoid");
