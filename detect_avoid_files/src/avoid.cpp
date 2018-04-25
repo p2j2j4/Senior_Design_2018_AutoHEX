@@ -29,7 +29,7 @@ int main(int argc, char **argv){
     ////////////////////////////////////////////
     ros::ServiceClient wp_clear_client = p.serviceClient<mavros_msgs::WaypointClear>("/mavros/mission/clear"); //("waypoint_clear_client")
     ros::ServiceClient wp_srv_client = n.serviceClient<mavros_msgs::WaypointPush>("waypoint_push_client");
-    ros::ServiceClient set_home_client = l.serviceClient<mavros_msgs::CommandHome>("command_home_client");
+    ros::ServiceClient set_home_client = l.serviceClient<mavros_msgs::CommandHome>("/mavros/mission/home"); //("command_home_client")
 
     mavros_msgs::WaypointPush wp_push_srv;
     mavros_msgs::WaypointClear wp_clear_srv;
@@ -49,11 +49,8 @@ int main(int argc, char **argv){
     wp_msg.x_lat = 40.0;
     wp_msg.y_long = 30.0;
     wp_msg.z_alt = 5.0;
-
-    wp_clear_srv.request = {};
-
-    wp_push_srv.request.start_index = 0;
-    wp_push_srv.request.waypoints.push_back(wp_msg);
+    
+   wp_push_srv.request.waypoints.push_back(wp_msg);
 
    set_home_srv.request.current_gps = false;
    set_home_srv.request.latitude = 11;
