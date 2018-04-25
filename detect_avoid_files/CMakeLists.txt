@@ -15,7 +15,7 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 
 add_executable(detect_avoid src/avoid.cpp)
 target_link_libraries(detect_avoid ${catkin_LIBRARIES})
-add_dependencies(dectect_avoid detect_avoid_generate_messages_cpp)
+add_dependencies(detect_avoid detect_avoid_generate_messages_cpp)
 
 add_executable(detect src/detect.cpp)
 target_link_libraries(detect ${catkin_LIBRARIES})
