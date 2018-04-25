@@ -2,10 +2,12 @@
 
 #include <ros/ros.h>
 
-//Mavros files
+// Mavros Commands
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/CommandTOL.h>
 #include <mavros_msgs/SetMode.h>
+
+// Waypoints
 #include <mavros_msgs/WaypointPush.h>
 #include <mavros_msgs/WaypointClear.h>
 #include <mavros_msgs/CommandHome.h>
@@ -17,12 +19,30 @@ int main(int argc, char **argv){
     // Add subscriber for velocity commands published by detect.cpp
     int rate = 10;
 
+    // Initiate node
     ros::init(argc, argv, "detect_avoid");
+
     ros::NodeHandle p;
     ros::NodeHandle n;
     ros::NodeHandle l;
 
     ros::Rate r(rate);
+
+    ////////////////////////////////////////////
+    /////////////////GUIDED/////////////////////
+    ////////////////////////////////////////////
+    ros::ServiceClient cl = n.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
+    mavros_msgs::SetMode srv_setMode;
+    srv_setMode.request.base_mode = 0;
+    srv_setMode.request.custom_mode = "GUIDED";
+
+    if(cl.call(srv_setMode)){
+        ROS_INFO("setmode send ok %d value:", srv_setMode.response.success);
+    }
+    else{
+        ROS_ERROR("Failed SetMode");
+        return -1;
+    }
     
     ////////////////////////////////////////////
     /////////////////Waypoints//////////////////
@@ -67,7 +87,6 @@ int main(int argc, char **argv){
      ROS_ERROR("Home position couldn't been changed");
    }
 
-
    if (wp_clear_client.call(wp_clear_srv)){
      ROS_INFO("Waypoint list was cleared");
      }
@@ -82,22 +101,6 @@ int main(int argc, char **argv){
      ROS_ERROR("Waypoint couldn't been sent");
      ROS_INFO("Success:%d", (bool)wp_push_srv.response.success);
    }
-
-    ////////////////////////////////////////////
-    /////////////////GUIDED/////////////////////
-    ////////////////////////////////////////////
-    ros::ServiceClient cl = n.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
-    mavros_msgs::SetMode srv_setMode;
-    srv_setMode.request.base_mode = 0;
-    srv_setMode.request.custom_mode = "GUIDED";
-
-    if(cl.call(srv_setMode)){
-        ROS_INFO("setmode send ok %d value:", srv_setMode.response.success);
-    }
-    else{
-        ROS_ERROR("Failed SetMode");
-        return -1;
-    }
 
     ////////////////////////////////////////////
     ///////////////////ARM//////////////////////
@@ -126,7 +129,6 @@ int main(int argc, char **argv){
     }else{
         ROS_ERROR("Failed Takeoff");
     }
-    
     
     ROS_INFO("Check");
 
