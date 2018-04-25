@@ -17,54 +17,59 @@ public:
         sub = n.subscribe<sensor_msgs::LaserScan>("/scan", 1000, &ScanAndDetect::scanCallback, this);
     }
 
-void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
-{
-    //int count = scan->scan_time / scan->time_increment;
+void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan) {
+
+    int count = scan->scan_time / scan->time_increment;
+ // float start_ang = scan->angle_min;
 
     // Set up 3D control Variables
-//  double ros_roll      = 0; // Exclude: will change on a case to case basis
-//  double ros_pitch     = -0.5;
-    double ros_yaw       = 0.0;
-    double ros_throttle  = 0.0;
-
-//    n.param<double>("ros_roll", ros_roll, 0.0);
-//    n.param<double>("ros_pitch", ros_pitch, 0.0);
-//    n.param<double>("ros_yaw", ros_yaw, 0.0);
-//    n.param<double>("ros_throttle", ros_throttle,0.0);
+    double yaw       = 0.0;
+    double throttle  = 2.0;
 
     // Objects that are within -115 and 115 degrees (in front of copter)
-        for(int i = -115; (-116 < i) && (i < 115); i++) {
-            float degree = RAD2DEG(scan->angle_min + scan->angle_increment * i);
+    for(int i = 0; count; i++) {
 
-            // Initialize Publisher variable: msg
-            geometry_msgs::TwistStamped msg;
+     // Initialize Publisher variable: msg
+        geometry_msgs::TwistStamped msg;
 
-            if (scan->ranges[i] < .3){ //change to .5 for actual coding
-                    msg.twist.linear.x = ros_throttle;
-                    msg.twist.linear.y = 0;
-                    msg.twist.linear.z = 0;
-                    msg.twist.angular.x = -5; //pitch backwards hard
-                    msg.twist.angular.y = 0;  //roll
-                    msg.twist.angular.z = ros_yaw;   //yaw
-                    ROS_ERROR(":DANGER object: [%f,%f]", degree, scan->ranges[i]);
-                    velocity.publish(msg); }
-         }
-// TO DO: figure out what the velocity values represent and implement them for diffferent object distances
-//            if (.5 < scan->ranges[i] < 3){ //between .5 and 3 meters
-//                    urgency = 2; // object is too close
-//                    ROS_ERROR(": [%f,%f]", degree, scan->ranges[i]);
-//                    detection_pub.publish(urgency); }
+     float degree = RAD2DEG(scan->angle_increment * i);
 
-//            if (3.25 < scan->ranges[i] < 8){ //between 3.25 and 8 meters
-//                    urgency = 1; // object is too close
-//                    ROS_ERROR(": [%f,%f]", degree, scan->ranges[i]);
-//                    detection_pub.publish(urgency); }
+          if ((degree > 115) && (degree < 245)) {
 
-//           else { //between 8 meters and infinite distance
-//                   urgency = 0; // no objects in front
-//                  ROS_INFO(": [%f,%f]", degree, scan->ranges[i]);
-//                    detection_pub.publish(urgency); }
-}
+              if (scan->ranges[i] < .5){ // .5 meter buffer
+                      msg.twist.linear.x = throttle;
+                      msg.twist.linear.y = 0;
+                      msg.twist.linear.z = 0;
+                      msg.twist.angular.x = -5;  //pitch backwards hard
+                      msg.twist.angular.y = 0;   //roll
+                      msg.twist.angular.z = yaw; //yaw
+                      ROS_ERROR(":DANGER object: [%f,%f]", degree, scan->ranges[i]);
+                      velocity.publish(msg); }
+
+              if (scan->ranges[i] < 2.5){ // 2.5 meter buffer
+                      msg.twist.linear.x = throttle;
+                      msg.twist.linear.y = 0;
+                      msg.twist.linear.z = 0;
+                      msg.twist.angular.x = 0;   //pitch
+                      msg.twist.angular.y = 5;   //roll
+                      msg.twist.angular.z = yaw; //yaw
+                      ROS_WARN(":Object at: [%f,%f] is nearing", degree, scan->ranges[i]);
+                      velocity.publish(msg); }
+
+              if (scan->ranges[i] < 5){ //5 meter buffer
+                      msg.twist.linear.x = throttle -1; // slow down
+                      msg.twist.linear.y = 0;
+                      msg.twist.linear.z = 0;
+                      msg.twist.angular.x = 0;   //pitch backwards hard
+                      msg.twist.angular.y = 0;   //roll kinda hard
+                      msg.twist.angular.z = yaw; //yaw
+                      ROS_INFO(":Object in range at: [%f] degrees at a distance of [%f]", degree, scan->ranges[i]);
+                      velocity.publish(msg); }
+
+            } // end range test between 115 and 245 degrees
+         } // end scan itteration
+} // end laser scanner callback function
+
 private:
     ros::NodeHandle n;
     ros::Publisher velocity;
