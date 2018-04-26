@@ -17,9 +17,9 @@ add_executable(detect_avoid src/avoid.cpp)
 target_link_libraries(detect_avoid ${catkin_LIBRARIES})
 add_dependencies(detect_avoid detect_avoid_generate_messages_cpp)
 
-add_executable(detect src/detect.cpp)
-target_link_libraries(detect ${catkin_LIBRARIES})
-add_dependencies(detect detect_avoid_generate_messages_cpp)
+add_executable(detect_avoid src/detect.cpp)
+target_link_libraries(detect_avoid ${catkin_LIBRARIES})
+add_dependencies(detect_avoid detect_avoid_generate_messages_cpp)
 
 install(
 	TARGETS detect_avoid
