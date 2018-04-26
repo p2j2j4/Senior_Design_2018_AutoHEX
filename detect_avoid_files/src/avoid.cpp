@@ -23,7 +23,47 @@ int main(int argc, char **argv){
 
     int rate = 10;
     ros::Rate r(rate);
+    ////////////////////////////////////////////
+    /////////////////LED_Example////////////////
+    ////////////////////////////////////////////
+    
+    cd Navio/C++/Examples/LED
+    make
+    sudo ./LED
+    #include "Navio/PCA9685.h"
 
+int main()
+{
+    PCA9685 pwm(RASPBERRY_PI_MODEL_B_I2C, PCA9685_DEFAULT_ADDRESS);
+    // PCA9685 pwm(RASPBERRY_PI_MODEL_A_I2C, PCA9685_DEFAULT_ADDRESS);
+    
+    pwm.initialize();
+
+    uint16_t R = 0, G = 0, B = 4095;
+
+    pwm.setPWM(0, R);
+    pwm.setPWM(1, G);
+    pwm.setPWM(2, B);
+
+    while (true) {
+        for (R = 0; R < 4095; R++)             
+        pwm.setPWM(0, R);         
+        for (B = 4095; B > 0; B--)
+        pwm.setPWM(2, B);
+
+        for (G = 0; G < 4095; G++)             
+        pwm.setPWM(1, G);         
+        for (R = 4095; R > 0; R--)
+        pwm.setPWM(0, R);
+
+        for (B = 0; B < 4095; B++)             
+        pwm.setPWM(2, B);         
+        for (G = 4095; G > 0; G--)
+        pwm.setPWM(1, G);
+    }
+
+    return 0;
+}      
     ////////////////////////////////////////////
     /////////////////GUIDED/////////////////////
     ////////////////////////////////////////////
