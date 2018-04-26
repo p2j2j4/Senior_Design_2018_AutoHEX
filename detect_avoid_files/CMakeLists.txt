@@ -13,11 +13,7 @@ catkin_package()
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
-add_executable(detect_avoid src/avoid.cpp)
-target_link_libraries(detect_avoid ${catkin_LIBRARIES})
-add_dependencies(detect_avoid detect_avoid_generate_messages_cpp)
-
-add_executable(detect_avoid src/detect.cpp)
+add_executable(detect_avoid src/detect_avoid.cpp)
 target_link_libraries(detect_avoid ${catkin_LIBRARIES})
 add_dependencies(detect_avoid detect_avoid_generate_messages_cpp)
 
