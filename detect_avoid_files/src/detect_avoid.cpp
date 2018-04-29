@@ -45,6 +45,8 @@ public:
         else{
             ROS_WARN("Failed SetMode"); }
 
+        sleep(2);
+
         /////////////////Waypoints//////////////////
 
         mavros_msgs::WaypointPush wp_push_srv;
@@ -87,6 +89,8 @@ public:
         else{
           ROS_WARN("Waypoint couldn't been sent"); }
 
+        sleep(2);
+
         ///////////////////ARM//////////////////////
 
         mavros_msgs::CommandBool srv;
@@ -99,16 +103,21 @@ public:
         /////////////////TAKEOFF////////////////////
 
         mavros_msgs::CommandTOL srv_takeoff;
-        srv_takeoff.request.altitude = 4; //adjust if height is too low TODO: check THR_MAX value in MP
+        srv_takeoff.request.altitude = 3; //adjust if height is too low
         srv_takeoff.request.latitude = 0;
         srv_takeoff.request.longitude = 0;
         srv_takeoff.request.min_pitch = 0;
         srv_takeoff.request.yaw = 0;
 
         if(takeoff_cl.call(srv_takeoff)){
-            ROS_INFO("Takeoff Status %d", srv_takeoff.response.success); }
+            ROS_INFO("Takeoff Status %d", srv_takeoff.response.success);
+                    if (srv_takeoff.response.success == 0) {
+                        ros::shutdown(); }// kill the node if a pre-arm check prevents takeoff
+        }
         else{
             ROS_WARN("Failed Takeoff"); }
+
+        sleep(7); // Allow copter to takeoff and hover before scanner data begins being processed
 
     // Initialize Subscriber
     sub = n.subscribe<sensor_msgs::LaserScan>("/scan", 400, &ScanAndDetect::scanCallback, this);
@@ -124,6 +133,7 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan) {
        mavros_msgs::CommandTOL srv_land;
 
     int count = scan->scan_time / scan->time_increment;
+    int land = 0; //make sure land is only set once
 
  // Set up velocity control variables
     double yaw       = 0.0;
@@ -132,23 +142,24 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan) {
     for(int i = 0; i < count; i++) { //Iterate over all scanned degrees
 
         float degree = RAD2DEG(scan->angle_increment * i);
-        bool land = false;
 
           if ((degree < 20) || (degree > 320)) {
 
-              if (scan->ranges[i] < .5){ // .5 meter buffer
+              if (scan->ranges[i] < .7){ // .7 meter buffer (extends beyond deathly spin of copter blades)
 
                       ROS_ERROR(":DANGER object: [%f,%f]", degree, scan->ranges[i]);
 
-                      if (!land) {
-                          land = true;
+                      if (land == 0) {
+                          land = 1;
                           srv_land.request.altitude = 0;
                           srv_land.request.latitude = 0;
                           srv_land.request.longitude = 0;
                           srv_land.request.min_pitch = 0;
                           srv_land.request.yaw = 0;
                       if(TOL.call(srv_land)){
-                          ROS_INFO("LAND Status: %d", srv_land.response.success); }
+                          ROS_INFO("LAND Status: %d", srv_land.response.success);
+                          sleep(10); // allow time for a safe landing
+                          ros::shutdown(); } //shutdown the node after it lands
                       }
               }
 
